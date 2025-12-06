@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>哈基米编码转换器 - 图片加密版</title>
+    <style>
+        /* 样式保持不变，与之前相同 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1100px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #2575fc;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: #2575fc;
+            border-bottom: 3px solid #2575fc;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .settings-section {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .setting-group {
+            margin-bottom: 15px;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2575fc;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #2575fc;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+        }
+
+        .char-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .char-preview-item {
+            padding: 8px 12px;
+            background: #fff;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            font-weight: bold;
+        }
+
+        .base-info {
+            background: #e8f4ff;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 5px;
+            font-size: 0.9rem;
+            color: #2575fc;
+        }
+
+        .key-section {
+            background: #fff8e1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .key-section h3 {
+            color: #ff9800;
+            margin-bottom: 10px;
+        }
+
+        .key-warning {
+            background: #ffebee;
+            color: #c62828;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .input-section, .output-section, .image-section {
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #2575fc;
+            margin-bottom: 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #eaeaea;
+        }
+
+        .text-input-container, .text-output-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .text-input, .text-output {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            line-height: 1.5;
+            word-break: break-all;
+            white-space: pre-wrap;
+            transition: all 0.3s;
+            resize: vertical;
+            background: #fff;
+        }
+
+        .text-input:focus, .text-output:focus {
+            outline: none;
+            border-color: #2575fc;
+            box-shadow: 0 0 0 3px rgba(37, 117, 252, 0.2);
+        }
+
+        .text-output {
+            background: #f9f9f9;
+            user-select: all;
+            cursor: text;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .encode-btn {
+            background: linear-gradient(to right, #6a11cb, #2575fc);
+            color: white;
+        }
+
+        .decode-btn {
+            background: linear-gradient(to right, #ff9a9e, #fecfef);
+            color: white;
+        }
+
+        .image-btn {
+            background: linear-gradient(to right, #4CAF50, #8BC34A);
+            color: white;
+        }
+
+        .delete-btn {
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+            color: white;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+
+        .copy-btn:hover {
+            background: #f0f0f0;
+            opacity: 1;
+        }
+
+        .copy-success {
+            position: absolute;
+            top: 10px;
+            right: 80px;
+            background: #4CAF50;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .copy-success.show {
+            opacity: 1;
+        }
+
+        .image-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .image-preview {
+            border: 2px dashed #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .image-upload {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .image-upload input[type="file"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .explanation {
+            background: #f0f7ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            border-left: 5px solid #2575fc;
+        }
+
+        .explanation h3 {
+            color: #2575fc;
+            margin-bottom: 10px;
+        }
+
+        .explanation p {
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .settings-section {
+                grid-template-columns: 1fr;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .copy-btn {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            .copy-success {
+                position: relative;
+                top: 0;
+                right: 0;
+                margin-top: 10px;
+                width: 100%;
+                text-align: center;
+            }
+
+            .image-container {
+                grid-template-columns: 1fr;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+        }
+
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>哈基米编码转换器 - 图片加密版</h1>
+        <p class="subtitle">支持多进制编码和图片隐写技术的加密工具</p>
+    </header>
+
+    <div class="tabs">
+        <div class="tab active" data-tab="text-encoding">文本编码</div>
+        <div class="tab" data-tab="image-encoding">图片加密</div>
+    </div>
+
+    <!-- 文本编码选项卡 -->
+    <div class="tab-content active" id="text-encoding">
+        <section class="key-section">
+            <h3>🔐 加密密钥</h3>
+            <div class="setting-group">
+                <label for="text-key">加密密钥（可选，用于增强安全性）：</label>
+                <input type="text" id="text-key" placeholder="输入加密密钥（留空则不使用密钥）">
+                <div class="key-warning" id="text-key-warning">警告：请妥善保管密钥，解密时需要相同的密钥！</div>
+            </div>
+        </section>
+
+        <section class="settings-section">
+            <div class="setting-group">
+                <label for="chars-input">自定义字符（用逗号分隔）：</label>
+                <input type="text" id="chars-input" placeholder="例如: 哈,基,米" value="哈,基,米">
+                <div class="base-info" id="base-info">自动检测进制：3进制</div>
+                <div class="char-preview" id="char-preview"></div>
+            </div>
+
+            <div class="setting-group">
+                <label for="preset-select">预设方案：</label>
+                <select id="preset-select">
+                    <option value="custom">自定义</option>
+                    <option value="hakimi">哈基米 (三进制)</option>
+                    <option value="binary">二进制 (0,1)</option>
+                    <option value="emoji">表情符号 (😀,😂,😍,😎)</option>
+                    <option value="animals">动物 (🐶,🐱,🐭,🐹,🐰)</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="input-section">
+            <h2>输入文本</h2>
+            <div class="text-input-container">
+                <textarea class="text-input" id="text-input" placeholder="请输入要编码的文本...">Hello, 哈基米!</textarea>
+            </div>
+            <div class="button-group">
+                <button class="encode-btn" id="encode-btn">编码文本</button>
+                <button class="decode-btn" id="decode-btn">解码文本</button>
+            </div>
+        </section>
+
+        <section class="output-section">
+            <h2>编码结果</h2>
+            <div class="text-output-container">
+                <textarea class="text-output" id="text-output" placeholder="编码结果将显示在这里..." readonly>编码结果将显示在这里...</textarea>
+                <button class="copy-btn" id="copy-btn">复制文本</button>
+                <div class="copy-success" id="copy-success">已复制到剪贴板！</div>
+            </div>
+        </section>
+    </div>
+
+    <!-- 图片加密选项卡 -->
+    <div class="tab-content" id="image-encoding">
+        <section class="key-section">
+            <h3>🔐 加密密钥</h3>
+            <div class="setting-group">
+                <label for="image-key">加密密钥（可选，用于增强安全性）：</label>
+                <input type="text" id="image-key" placeholder="输入加密密钥（留空则不使用密钥）">
+                <div class="key-warning" id="image-key-warning">警告：请妥善保管密钥，解密时需要相同的密钥！</div>
+            </div>
+        </section>
+
+        <section class="input-section">
+            <h2>输入文本</h2>
+            <div class="text-input-container">
+                <textarea class="text-input" id="image-input-text" placeholder="请输入要加密到图片中的文本...">这是一个秘密消息!</textarea>
+            </div>
+        </section>
+
+        <section class="image-section">
+            <h2>图片加密/解密</h2>
+            <div class="image-container">
+                <div class="image-preview">
+                    <h3>原始图片</h3>
+                    <canvas id="original-canvas" style="display: none;"></canvas>
+                    <img id="original-image" src="" alt="原始图片预览" style="display: none;">
+                    <p id="no-image-text">请上传图片</p>
+                    <div class="image-upload">
+                        <input type="file" id="image-upload" accept="image/*">
+                        <button class="image-btn" id="encode-image-btn">加密文本到图片</button>
+                        <button class="delete-btn" id="delete-original-btn" style="display: none;">删除图片</button>
+                    </div>
+                </div>
+                <div class="image-preview">
+                    <h3>加密后图片</h3>
+                    <canvas id="encoded-canvas" style="display: none;"></canvas>
+                    <img id="encoded-image" src="" alt="加密后图片预览" style="display: none;">
+                    <p id="no-encoded-image-text">加密后图片将显示在这里</p>
+                    <div class="image-actions">
+                        <button class="image-btn" id="decode-image-btn">从图片解密文本</button>
+                        <button class="image-btn" id="download-image-btn" style="display: none;">下载加密图片</button>
+                        <button class="delete-btn" id="delete-encoded-btn" style="display: none;">删除图片</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="output-section">
+            <h2>解密结果</h2>
+            <div class="text-output-container">
+                <textarea class="text-output" id="image-output-text" placeholder="解密结果将显示在这里..." readonly>解密结果将显示在这里...</textarea>
+                <button class="copy-btn" id="copy-image-btn">复制文本</button>
+                <div class="copy-success" id="copy-image-success">已复制到剪贴板！</div>
+            </div>
+        </section>
+    </div>
+
+    <section class="explanation">
+        <h3>功能说明</h3>
+        <p><strong>文本编码功能：</strong>将文本转换为自定义字符组成的编码，支持2-16进制。</p>
+        <p><strong>图片加密功能：</strong>使用LSB隐写技术将文本隐藏到图片中，对图片视觉质量影响极小。</p>
+        <p><strong>密钥功能：</strong>使用AES加密算法对数据进行加密，增强安全性。解密时需要相同的密钥。</p>
+        <p>1. 文本编码：首先将文本转换为UTF-8字节序列，然后将每个字节转换为指定进制的数字，每个数字位对应一个自定义字符。</p>
+        <p>2. 图片加密：将文本转换为二进制数据，然后替换图片像素的最低有效位，实现信息隐藏。</p>
+        <p>3. 密钥保护：使用AES加密算法对数据进行加密，确保只有持有正确密钥的用户可以解密。</p>
+    </section>
+
+    <footer>
+        <p>哈基米编码转换器 - 图片加密版 © 哈！</p>
+    </footer>
+</div>
+
+<script>
+        // ==================== DOM元素引用 ====================
+        // 文本编码相关元素
+        const textKey = document.getElementById('text-key');
+        const textKeyWarning = document.getElementById('text-key-warning');
+        const charsInput = document.getElementById('chars-input');
+        const presetSelect = document.getElementById('preset-select');
+        const baseInfo = document.getElementById('base-info');
+        const charPreview = document.getElementById('char-preview');
+        const textInput = document.getElementById('text-input');
+        const textOutput = document.getElementById('text-output');
+        const encodeBtn = document.getElementById('encode-btn');
+        const decodeBtn = document.getElementById('decode-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const copySuccess = document.getElementById('copy-success');
+
+        // 图片加密相关元素
+        const imageKey = document.getElementById('image-key');
+        const imageKeyWarning = document.getElementById('image-key-warning');
+        const imageInputText = document.getElementById('image-input-text');
+        const imageUpload = document.getElementById('image-upload');
+        const originalCanvas = document.getElementById('original-canvas');
+        const originalImage = document.getElementById('original-image');
+        const encodedCanvas = document.getElementById('encoded-canvas');
+        const encodedImage = document.getElementById('encoded-image');
+        const noImageText = document.getElementById('no-image-text');
+        const noEncodedImageText = document.getElementById('no-encoded-image-text');
+        const encodeImageBtn = document.getElementById('encode-image-btn');
+        const decodeImageBtn = document.getElementById('decode-image-btn');
+        const downloadImageBtn = document.getElementById('download-image-btn');
+        const deleteOriginalBtn = document.getElementById('delete-original-btn');
+        const deleteEncodedBtn = document.getElementById('delete-encoded-btn');
+        const imageOutputText = document.getElementById('image-output-text');
+        const copyImageBtn = document.getElementById('copy-image-btn');
+        const copyImageSuccess = document.getElementById('copy-image-success');
+
+        // 选项卡相关元素
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        // ==================== 预设方案配置 ====================
+        const presets = {
+            'hakimi': { base: 3, chars: '哈,基,米' },
+            'binary': { base: 2, chars: '0,1' },
+            'emoji': { base: 4, chars: '😀,😂,😍,😎' },
+            'animals': { base: 5, chars: '🐶,🐱,🐭,🐹,🐰' }
+        };
+
+        // 当前加密的图片数据
+        let currentEncodedImageData = null;
+        let originalImageData = null;
+
+        // 当前进制数
+        let currentBase = 3;
+
+        // ==================== 初始化函数 ====================
+        /**
+         * 初始化页面
+         */
+        function initializePage() {
+            updateCharPreview();
+            setupEventListeners();
+        }
+
+        /**
+         * 设置事件监听器
+         */
+        function setupEventListeners() {
+            // 选项卡切换
+            tabs.forEach(tab => {
+                tab.addEventListener('click', handleTabSwitch);
+            });
+
+            // 密钥输入事件
+            textKey.addEventListener('input', () => {
+                textKeyWarning.style.display = textKey.value ? 'block' : 'none';
+            });
+            imageKey.addEventListener('input', () => {
+                imageKeyWarning.style.display = imageKey.value ? 'block' : 'none';
+            });
+
+            // 文本编码相关事件
+            charsInput.addEventListener('input', updateCharPreview);
+            presetSelect.addEventListener('change', handlePresetChange);
+            encodeBtn.addEventListener('click', handleEncodeText);
+            decodeBtn.addEventListener('click', handleDecodeText);
+            copyBtn.addEventListener('click', handleCopyText);
+
+            // 图片加密相关事件
+            imageUpload.addEventListener('change', handleImageUpload);
+            encodeImageBtn.addEventListener('click', handleEncodeImage);
+            decodeImageBtn.addEventListener('click', handleDecodeImage);
+            downloadImageBtn.addEventListener('click', handleDownloadImage);
+            deleteOriginalBtn.addEventListener('click', handleDeleteOriginalImage);
+            deleteEncodedBtn.addEventListener('click', handleDeleteEncodedImage);
+            copyImageBtn.addEventListener('click', handleCopyImageText);
+
+            // 双击输出区域全选文本
+            textOutput.addEventListener('dblclick', selectAllText);
+            imageOutputText.addEventListener('dblclick', selectAllText);
+        }
+
+        // ==================== 密钥功能 ====================
+        /**
+         * 从密钥生成AES密钥
+         * @param {string} password - 用户输入的密码
+         * @returns {Promise<CryptoKey>} AES密钥
+         */
+        async function deriveKey(password) {
+            const encoder = new TextEncoder();
+            const keyMaterial = await window.crypto.subtle.importKey(
+                'raw',
+                encoder.encode(password),
+                'PBKDF2',
+                false,
+                ['deriveKey']
+            );
+
+            return window.crypto.subtle.deriveKey(
+                {
+                    name: 'PBKDF2',
+                    salt: encoder.encode('HakimiEncoderSalt'),
+                    iterations: 100000,
+                    hash: 'SHA-256'
+                },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        /**
+         * 使用AES加密数据
+         * @param {string} data - 要加密的数据
+         * @param {string} password - 密码
+         * @returns {Promise<string>} 加密后的数据（Base64编码）
+         */
+        async function encryptData(data, password) {
+            if (!password) return data;
+
+            try {
+                const encoder = new TextEncoder();
+                const dataBuffer = encoder.encode(data);
+                const key = await deriveKey(password);
+                const iv = window.crypto.getRandomValues(new Uint8Array(12));
+
+                const encryptedBuffer = await window.crypto.subtle.encrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    dataBuffer
+                );
+
+                // 将IV和加密数据合并
+                const result = new Uint8Array(iv.length + encryptedBuffer.byteLength);
+                result.set(iv, 0);
+                result.set(new Uint8Array(encryptedBuffer), iv.length);
+
+                return btoa(String.fromCharCode(...result));
+            } catch (error) {
+                throw new Error('加密失败: ' + error.message);
+            }
+        }
+
+        /**
+         * 使用AES解密数据
+         * @param {string} encryptedData - 加密的数据（Base64编码）
+         * @param {string} password - 密码
+         * @returns {Promise<string>} 解密后的数据
+         */
+        async function decryptData(encryptedData, password) {
+            if (!password) return encryptedData;
+
+            try {
+                // 检查是否为Base64编码的加密数据
+                if (!encryptedData.match(/^[A-Za-z0-9+/]*={0,2}$/)) {
+                    return encryptedData; // 不是加密数据，直接返回
+                }
+
+                const encryptedBuffer = Uint8Array.from(atob(encryptedData), c => c.charCodeAt(0));
+                const iv = encryptedBuffer.slice(0, 12);
+                const data = encryptedBuffer.slice(12);
+
+                const key = await deriveKey(password);
+
+                const decryptedBuffer = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: iv
+                    },
+                    key,
+                    data
+                );
+
+                const decoder = new TextDecoder();
+                return decoder.decode(decryptedBuffer);
+            } catch (error) {
+                throw new Error('解密失败: 密钥错误或数据损坏');
+            }
+        }
+
+        // ==================== 图片元数据嵌入功能 ====================
+        /**
+         * 将密钥信息嵌入到图片数据中
+         * @param {ImageData} imageData - 图片数据
+         * @param {string} key - 加密密钥
+         * @returns {ImageData} 嵌入密钥信息后的图片数据
+         */
+        function embedKeyInfo(imageData, key) {
+            if (!key) return imageData;
+
+            const data = imageData.data;
+            const encoder = new TextEncoder();
+            const keyBytes = encoder.encode(key);
+
+            // 在图片数据末尾预留空间存储密钥信息
+            // 使用前4个字节存储密钥长度
+            const keyLength = keyBytes.length;
+
+            // 检查是否有足够空间存储密钥信息
+            if (data.length < keyLength + 4) {
+                throw new Error('图片太小，无法存储密钥信息');
+            }
+
+            // 在数据末尾存储密钥信息
+            const startIndex = data.length - keyLength - 4;
+
+            // 存储密钥长度
+            for (let i = 0; i < 4; i++) {
+                const lengthByte = (keyLength >> (i * 8)) & 0xFF;
+                data[startIndex + i] = lengthByte;
+            }
+
+            // 存储密钥数据
+            for (let i = 0; i < keyLength; i++) {
+                data[startIndex + 4 + i] = keyBytes[i];
+            }
+
+            return imageData;
+        }
+
+        /**
+         * 从图片数据中提取密钥信息
+         * @param {ImageData} imageData - 图片数据
+         * @returns {string|null} 提取的密钥，如果没有则返回null
+         */
+        function extractKeyInfo(imageData) {
+            const data = imageData.data;
+
+            // 从数据末尾读取密钥长度
+            let keyLength = 0;
+            for (let i = 0; i < 4; i++) {
+                const lengthByte = data[data.length - 4 - i];
+                keyLength |= (lengthByte << (i * 8));
+            }
+
+            // 检查密钥长度是否合理
+            if (keyLength <= 0 || keyLength > 1000) {
+                return null;
+            }
+
+            // 读取密钥数据
+            const keyBytes = new Uint8Array(keyLength);
+            const startIndex = data.length - keyLength - 4;
+
+            for (let i = 0; i < keyLength; i++) {
+                keyBytes[i] = data[startIndex + 4 + i];
+            }
+
+            const decoder = new TextDecoder();
+            return decoder.decode(keyBytes);
+        }
+
+        // ==================== 选项卡功能 ====================
+        /**
+         * 处理选项卡切换
+         */
+        function handleTabSwitch() {
+            // 移除所有活动状态
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+
+            // 添加当前活动状态
+            this.classList.add('active');
+            const tabId = this.getAttribute('data-tab');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // ==================== 文本编码功能 ====================
+        /**
+         * 更新字符预览
+         */
+        function updateCharPreview() {
+            const chars = charsInput.value.split(',').map(c => c.trim()).filter(c => c);
+
+            // 自动检测进制：根据字符数量确定进制
+            currentBase = chars.length;
+
+            // 更新进制信息显示
+            baseInfo.textContent = `自动检测进制：${currentBase}进制`;
+
+            charPreview.innerHTML = '';
+
+            if (currentBase < 2) {
+                charPreview.innerHTML = `<div style="color: red;">错误：至少需要2个字符</div>`;
+                return;
+            }
+
+            if (currentBase > 16) {
+                charPreview.innerHTML = `<div style="color: red;">错误：最多支持16个字符</div>`;
+                return;
+            }
+
+            for (let i = 0; i < currentBase; i++) {
+                const charItem = document.createElement('div');
+                charItem.className = 'char-preview-item';
+                charItem.textContent = `${i} → ${chars[i] || '?'}`;
+                charPreview.appendChild(charItem);
+            }
+        }
+
+        /**
+         * 处理预设方案变更
+         */
+        function handlePresetChange() {
+            const presetName = this.value;
+            if (presetName === 'custom') return;
+
+            const preset = presets[presetName];
+            if (preset) {
+                charsInput.value = preset.chars;
+                updateCharPreview();
+            }
+        }
+
+        /**
+         * 文本编码函数（带密钥支持）
+         * @param {string} text - 要编码的文本
+         * @param {number} base - 进制数
+         * @param {string[]} chars - 字符映射数组
+         * @param {string} key - 加密密钥
+         * @returns {Promise<string>} 编码后的字符串
+         */
+        async function textToCustomEncoding(text, base, chars, key) {
+            // 如果有密钥，先加密文本
+            let processedText = text;
+            if (key) {
+                processedText = await encryptData(text, key);
+            }
+
+            const encoder = new TextEncoder();
+            const byteData = encoder.encode(processedText);
+            let result = [];
+
+            for (let byteVal of byteData) {
+                let val = byteVal;
+                let digits = [];
+
+                // 将字节值转换为指定进制的数字
+                for (let i = 0; i < 8; i++) {
+                    digits.push(val % base);
+                    val = Math.floor(val / base);
+                }
+
+                // 倒序，使高位在前
+                digits.reverse();
+
+                for (let d of digits) {
+                    if (d >= chars.length) {
+                        throw new Error(`数字${d}超出字符映射范围`);
+                    }
+                    result.push(chars[d]);
+                }
+            }
+
+            return result.join('');
+        }
+
+        /**
+         * 文本解码函数（带密钥支持）
+         * @param {string} encodedStr - 编码后的字符串
+         * @param {number} base - 进制数
+         * @param {string[]} chars - 字符映射数组
+         * @param {string} key - 解密密钥
+         * @returns {Promise<string>} 解码后的文本
+         */
+        async function customEncodingToText(encodedStr, base, chars, key) {
+            // 创建反向映射
+            const reverseMapping = {};
+            for (let i = 0; i < chars.length; i++) {
+                reverseMapping[chars[i]] = i;
+            }
+
+            // 检查输入是否只包含有效字符
+            const validChars = new Set(chars);
+            for (let char of encodedStr) {
+                if (!validChars.has(char)) {
+                    throw new Error(`输入包含无效字符: ${char}`);
+                }
+            }
+
+            // 检查长度是否为8的倍数
+            if (encodedStr.length % 8 !== 0) {
+                throw new Error(`编码长度必须是8的倍数`);
+            }
+
+            let byteList = [];
+            const encodedChars = Array.from(encodedStr);
+
+            for (let i = 0; i < encodedChars.length; i += 8) {
+                let val = 0;
+
+                for (let j = 0; j < 8; j++) {
+                    const char = encodedChars[i + j];
+                    const digit = reverseMapping[char];
+
+                    if (digit === undefined) {
+                        throw new Error(`无效字符: ${char}`);
+                    }
+
+                    val = val * base + digit;
+                }
+
+                if (val > 255) {
+                    throw new Error("解码值超出字节范围");
+                }
+
+                byteList.push(val);
+            }
+
+            const decoder = new TextDecoder();
+            let decodedText = decoder.decode(new Uint8Array(byteList));
+
+            // 如果有密钥，尝试解密
+            if (key) {
+                decodedText = await decryptData(decodedText, key);
+            }
+
+            return decodedText;
+        }
+
+        /**
+         * 处理文本编码
+         */
+        async function handleEncodeText() {
+            const input = textInput.value.trim();
+            const chars = charsInput.value.split(',').map(c => c.trim()).filter(c => c);
+            const key = textKey.value.trim();
+
+            if (!input) {
+                setOutputText(textOutput, "请输入要编码的文本", true);
+                return;
+            }
+
+            if (chars.length < 2) {
+                setOutputText(textOutput, `错误：至少需要2个字符`, true);
+                return;
+            }
+
+            if (chars.length > 16) {
+                setOutputText(textOutput, `错误：最多支持16个字符`, true);
+                return;
+            }
+
+            try {
+                const encoded = await textToCustomEncoding(input, currentBase, chars, key);
+                setOutputText(textOutput, encoded, false);
+                animateElement(textOutput);
+            } catch (error) {
+                setOutputText(textOutput, "编码错误: " + error.message, true);
+            }
+        }
+
+        /**
+         * 处理文本解码
+         */
+        async function handleDecodeText() {
+            const input = textInput.value.trim();
+            const chars = charsInput.value.split(',').map(c => c.trim()).filter(c => c);
+            const key = textKey.value.trim();
+
+            if (!input) {
+                setOutputText(textOutput, "请输入要解码的编码", true);
+                return;
+            }
+
+            if (chars.length < 2) {
+                setOutputText(textOutput, `错误：至少需要2个字符`, true);
+                return;
+            }
+
+            if (chars.length > 16) {
+                setOutputText(textOutput, `错误：最多支持16个字符`, true);
+                return;
+            }
+
+            try {
+                const decoded = await customEncodingToText(input, currentBase, chars, key);
+                setOutputText(textOutput, decoded, false);
+                animateElement(textOutput);
+            } catch (error) {
+                setOutputText(textOutput, "解码错误: " + error.message, true);
+            }
+        }
+
+        // ==================== 图片加密功能 ====================
+        /**
+         * 处理图片上传
+         */
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    // 显示原始图片
+                    originalImage.src = event.target.result;
+                    originalImage.style.display = 'block';
+                    noImageText.style.display = 'none';
+
+                    // 设置canvas尺寸
+                    originalCanvas.width = img.width;
+                    originalCanvas.height = img.height;
+                    const ctx = originalCanvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+
+                    // 保存原始图片数据
+                    originalImageData = ctx.getImageData(0, 0, img.width, img.height);
+
+                    // 显示删除按钮
+                    deleteOriginalBtn.style.display = 'block';
+
+                    // 重置加密图片预览
+                    encodedImage.style.display = 'none';
+                    noEncodedImageText.style.display = 'block';
+                    downloadImageBtn.style.display = 'none';
+                    deleteEncodedBtn.style.display = 'none';
+
+                    // 重置当前加密数据
+                    currentEncodedImageData = null;
+
+                    // 清空解密结果
+                    setOutputText(imageOutputText, '解密结果将显示在这里...', false);
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * 处理图片加密
+         */
+        async function handleEncodeImage() {
+            const text = imageInputText.value.trim();
+            const key = imageKey.value.trim();
+
+            if (!text) {
+                setOutputText(imageOutputText, '请输入要加密的文本', true);
+                return;
+            }
+
+            if (originalCanvas.width === 0) {
+                setOutputText(imageOutputText, '请先上传图片', true);
+                return;
+            }
+
+            try {
+                // 获取图片数据
+                const ctx = originalCanvas.getContext('2d');
+                const imageData = ctx.getImageData(0, 0, originalCanvas.width, originalCanvas.height);
+                const data = imageData.data;
+
+                // 如果有密钥，先加密文本
+                let processedText = text;
+                if (key) {
+                    processedText = await encryptData(text, key);
+                }
+
+                // 将文本转换为二进制
+                const encoder = new TextEncoder();
+                const textBytes = encoder.encode(processedText);
+
+                // 检查图片容量是否足够
+                const maxTextLength = Math.floor(data.length / 8) - 4; // 减去4个字节用于存储文本长度
+                if (textBytes.length > maxTextLength) {
+                    setOutputText(imageOutputText, `图片容量不足，最多可存储${maxTextLength}个字符`, true);
+                    return;
+                }
+
+                // 将文本长度写入前4个字节
+                const textLength = textBytes.length;
+                for (let i = 0; i < 4; i++) {
+                    const lengthByte = (textLength >> (i * 8)) & 0xFF;
+                    for (let j = 0; j < 8; j++) {
+                        const bit = (lengthByte >> j) & 1;
+                        const pixelIndex = i * 8 + j;
+                        // 只修改RGB通道，跳过Alpha通道
+                        if (pixelIndex * 4 < data.length) {
+                            data[pixelIndex * 4] = (data[pixelIndex * 4] & 0xFE) | bit;
+                        }
+                    }
+                }
+
+                // 将文本数据写入图片
+                for (let i = 0; i < textBytes.length; i++) {
+                    const byte = textBytes[i];
+                    for (let j = 0; j < 8; j++) {
+                        const bit = (byte >> j) & 1;
+                        const pixelIndex = (i * 8 + j) + 32; // 跳过前32位（4字节）的长度信息
+                        // 只修改RGB通道，跳过Alpha通道
+                        if (pixelIndex * 4 < data.length) {
+                            data[pixelIndex * 4] = (data[pixelIndex * 4] & 0xFE) | bit;
+                        }
+                    }
+                }
+
+                // 将密钥信息嵌入到图片中
+                if (key) {
+                    embedKeyInfo(imageData, key);
+                }
+
+                // 创建加密后的图片
+                encodedCanvas.width = originalCanvas.width;
+                encodedCanvas.height = originalCanvas.height;
+                const encodedCtx = encodedCanvas.getContext('2d');
+                encodedCtx.putImageData(imageData, 0, 0);
+
+                // 保存原始图像数据用于后续解密
+                currentEncodedImageData = imageData;
+
+                // 显示加密后的图片
+                const imageDataUrl = encodedCanvas.toDataURL();
+                encodedImage.src = imageDataUrl;
+                encodedImage.style.display = 'block';
+                noEncodedImageText.style.display = 'none';
+                downloadImageBtn.style.display = 'block';
+                deleteEncodedBtn.style.display = 'block';
+
+                setOutputText(imageOutputText, '文本已成功加密到图片中！', false);
+
+            } catch (error) {
+                setOutputText(imageOutputText, "图片加密错误: " + error.message, true);
+            }
+        }
+
+        /**
+         * 处理图片解密
+         */
+        async function handleDecodeImage() {
+            if (encodedCanvas.width === 0 && originalCanvas.width === 0) {
+                setOutputText(imageOutputText, '请先上传图片', true);
+                return;
+            }
+
+            try {
+                let imageData;
+
+                // 优先使用当前加密的图像数据（避免PNG压缩问题）
+                if (currentEncodedImageData) {
+                    imageData = currentEncodedImageData;
+                } else {
+                    // 如果是从文件上传的图片，从canvas获取数据
+                    let canvasToUse = originalCanvas;
+                    const ctx = canvasToUse.getContext('2d');
+                    imageData = ctx.getImageData(0, 0, canvasToUse.width, canvasToUse.height);
+                }
+
+                const data = imageData.data;
+
+                // 尝试从图片中提取密钥信息
+                const embeddedKey = extractKeyInfo(imageData);
+                const userKey = imageKey.value.trim();
+
+                // 优先使用用户输入的密钥，如果没有则使用嵌入的密钥
+                const decryptionKey = userKey || embeddedKey;
+
+                // 读取前4个字节获取文本长度
+                let textLength = 0;
+                for (let i = 0; i < 4; i++) {
+                    let byte = 0;
+                    for (let j = 0; j < 8; j++) {
+                        const pixelIndex = i * 8 + j;
+                        // 从RGB通道读取数据
+                        if (pixelIndex * 4 < data.length) {
+                            const bit = data[pixelIndex * 4] & 1;
+                            byte |= (bit << j);
+                        }
+                    }
+                    textLength |= (byte << (i * 8));
+                }
+
+                // 检查文本长度是否合理
+                if (textLength <= 0 || textLength > 100000) {
+                    setOutputText(imageOutputText, '未检测到有效的隐藏文本', true);
+                    return;
+                }
+
+                // 读取文本数据
+                const textBytes = new Uint8Array(textLength);
+                for (let i = 0; i < textLength; i++) {
+                    let byte = 0;
+                    for (let j = 0; j < 8; j++) {
+                        const pixelIndex = (i * 8 + j) + 32; // 跳过前32位（4字节）的长度信息
+                        // 从RGB通道读取数据
+                        if (pixelIndex * 4 < data.length) {
+                            const bit = data[pixelIndex * 4] & 1;
+                            byte |= (bit << j);
+                        }
+                    }
+                    textBytes[i] = byte;
+                }
+
+                // 解码文本
+                const decoder = new TextDecoder();
+                let text = decoder.decode(textBytes);
+
+                // 如果有密钥，尝试解密
+                if (decryptionKey) {
+                    try {
+                        text = await decryptData(text, decryptionKey);
+                    } catch (error) {
+                        setOutputText(imageOutputText, "解密失败: 密钥错误或数据损坏", true);
+                        return;
+                    }
+                }
+
+                // 显示解密结果
+                imageInputText.value = text;
+                setOutputText(imageOutputText, text, false);
+
+            } catch (error) {
+                setOutputText(imageOutputText, "解密错误: " + error.message, true);
+            }
+        }
+
+        /**
+         * 处理图片下载
+         */
+        function handleDownloadImage() {
+            if (encodedCanvas.width === 0) {
+                setOutputText(imageOutputText, '没有可下载的加密图片', true);
+                return;
+            }
+
+            // 使用原始图像数据创建下载链接，避免PNG压缩问题
+            if (currentEncodedImageData) {
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = currentEncodedImageData.width;
+                tempCanvas.height = currentEncodedImageData.height;
+                const tempCtx = tempCanvas.getContext('2d');
+                tempCtx.putImageData(currentEncodedImageData, 0, 0);
+
+                const link = document.createElement('a');
+                link.download = 'encoded_image.png';
+                link.href = tempCanvas.toDataURL('image/png');
+                link.click();
+            } else {
+                const link = document.createElement('a');
+                link.download = 'encoded_image.png';
+                link.href = encodedCanvas.toDataURL();
+                link.click();
+            }
+        }
+
+        /**
+         * 处理删除原始图片
+         */
+        function handleDeleteOriginalImage() {
+            // 重置原始图片相关元素
+            originalImage.src = '';
+            originalImage.style.display = 'none';
+            noImageText.style.display = 'block';
+            originalCanvas.width = 0;
+            originalCanvas.height = 0;
+            deleteOriginalBtn.style.display = 'none';
+            imageUpload.value = '';
+            originalImageData = null;
+
+            // 同时重置加密图片
+            handleDeleteEncodedImage();
+
+            // 清空解密结果
+            setOutputText(imageOutputText, '解密结果将显示在这里...', false);
+        }
+
+        /**
+         * 处理删除加密图片
+         */
+        function handleDeleteEncodedImage() {
+            // 重置加密图片相关元素
+            encodedImage.src = '';
+            encodedImage.style.display = 'none';
+            noEncodedImageText.style.display = 'block';
+            encodedCanvas.width = 0;
+            encodedCanvas.height = 0;
+            downloadImageBtn.style.display = 'none';
+            deleteEncodedBtn.style.display = 'none';
+            currentEncodedImageData = null;
+
+            // 清空解密结果
+            setOutputText(imageOutputText, '解密结果将显示在这里...', false);
+        }
+
+        // ==================== 通用功能 ====================
+        /**
+         * 设置输出文本
+         * @param {HTMLElement} element - 输出元素
+         * @param {string} text - 要设置的文本
+         * @param {boolean} isError - 是否为错误信息
+         */
+        function setOutputText(element, text, isError) {
+            element.value = text;
+            element.style.color = isError ? "#ff6b6b" : "#333";
+        }
+
+        /**
+         * 动画效果
+         * @param {HTMLElement} element - 要添加动画的元素
+         */
+        function animateElement(element) {
+            element.style.transform = "scale(1.02)";
+            setTimeout(() => {
+                element.style.transform = "scale(1)";
+            }, 200);
+        }
+
+        /**
+         * 全选文本
+         */
+        function selectAllText() {
+            this.select();
+        }
+
+        /**
+         * 处理文本复制
+         */
+        function handleCopyText() {
+            const textToCopy = textOutput.value;
+
+            if (textToCopy === "编码结果将显示在这里..." ||
+                textToCopy.startsWith("编码错误") ||
+                textToCopy.startsWith("解码错误")) {
+                return;
+            }
+
+            copyToClipboard(textToCopy, copySuccess);
+        }
+
+        /**
+         * 处理图片解密文本复制
+         */
+        function handleCopyImageText() {
+            const textToCopy = imageOutputText.value;
+
+            if (textToCopy === "解密结果将显示在这里..." ||
+                textToCopy.startsWith("解密错误")) {
+                return;
+            }
+
+            copyToClipboard(textToCopy, copyImageSuccess);
+        }
+
+        /**
+         * 复制文本到剪贴板
+         * @param {string} text - 要复制的文本
+         * @param {HTMLElement} successElement - 成功提示元素
+         */
+        function copyToClipboard(text, successElement) {
+            // 使用现代剪贴板API
+            navigator.clipboard.writeText(text).then(() => {
+                // 显示成功消息
+                successElement.classList.add('show');
+                setTimeout(() => {
+                    successElement.classList.remove('show');
+                }, 2000);
+            }).catch(err => {
+                // 备用方法：使用document.execCommand
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                // 显示成功消息
+                successElement.classList.add('show');
+                setTimeout(() => {
+                    successElement.classList.remove('show');
+                }, 2000);
+            });
+        }
+
+        // ==================== 初始化页面 ====================
+        initializePage();
+</script>
+</body>
+</html>
